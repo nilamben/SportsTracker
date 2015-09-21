@@ -1,0 +1,239 @@
+
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Geocoding service</title>
+    <style>
+      html, body, #map-canvas {
+        height: 100%;
+        margin: 0px;
+        padding: 0px;
+        align: left
+      }
+      #panel {
+     	 align: right;
+     	 height: 100%;
+     	 weight:40%;
+        position: absolute;
+        top: 5px;
+        left: 95%;
+        margin-left: -180px;
+        z-index: 5;
+        background-color: #fff;
+        padding: 5px;
+        border: 1px solid #999;
+      }
+    </style>
+		<!--  Add this Google map Api link -->
+     <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=false"></script>
+     <script type="text/javascript" src="https://www.google.com/jsapi"></script>
+<script>
+	var geocoder;
+	var map;
+	
+	//Initialize google map object with providing proper location zone
+	function initialize() {
+		geocoder = new google.maps.Geocoder();
+		var latlng = new google.maps.LatLng(-34.397, 150.644); //provide default location which you want to show on page load
+		var mapOptions = {
+			zoom : 2,
+			center : latlng
+		}
+		
+		// Read json data 
+		var script = document.createElement('script');
+		script.src = 'data1.js';
+		document.getElementsByTagName('head')[0].appendChild(script);
+
+		map = new google.maps.Map(document.getElementById('map-canvas'),
+				mapOptions);
+		
+	}
+	google.maps.event.addDomListener(window, 'load', initialize);
+	 google.load('visualization', '1.0', {'packages':['corechart']});
+	 
+	function facebook_data(results) {
+
+		for (var i = 0; i < results.friends.data.length; i++) {
+
+			var friend = results.friends.data[i].location.name;
+			// alert(friend);
+			var sport = results.friends.data[i].sports.name;
+			codeAddressnewplace(friend, sport);
+
+		}
+	}
+	
+
+	function codeAddressnewplace(address, sport) {
+		// var address = document.getElementById('address').value;
+
+		geocoder.geocode({
+			'address' : address
+		}, function(results, status) {
+			if (status == google.maps.GeocoderStatus.OK) {
+				map.setCenter(results[0].geometry.location);
+
+				var icon = "";
+				//Give different color code for ploting location
+				switch (sport) {
+				case "Basketball":
+					icon = "red";
+					break;
+				case "Football":
+					icon = "blue";
+					break;
+				case "Cricket":
+					icon = "yellow";
+					break;
+				case "Table tennis":
+					icon = "green";
+					break;
+				case "Golf":
+					icon = "orange";
+					break;
+				}
+				icon = "http://maps.google.com/mapfiles/ms/icons/" + icon
+						+ ".png";
+					
+				//Marker object use to ploat our location on google map
+				var marker = new google.maps.Marker({
+					map : map,
+					zoom : 2,   		// its provide default map zoom option
+					title : sport,
+					animation : google.maps.Animation.DROP,
+					icon : new google.maps.MarkerImage(icon),
+					position : results[0].geometry.location
+				});
+					
+				// call function when user click on perticular ploated location
+				google.maps.event.addListener(marker, 'click', function() {
+					drawChart(this);
+				});
+				
+			} else if (status == google.maps.GeocoderStatus.OVER_QUERY_LIMIT) {
+				setTimeout("wait = false", 1000);
+
+			} else {
+				//alert(address);
+				alert('Geocode was not successful for the following reason: '
+						+ status);
+			}
+		});
+
+	}
+
+	// To draw PI chart when you click on perticular location on google Map
+	function drawChart(marker) {
+		//create datatable and define how many parts you want to display on chart
+		 var data = new google.visualization.DataTable();
+	        data.addColumn('string', 'Topping');
+	        data.addColumn('number', 'Slices');
+	        data.addRows([
+	          ['Table Tennis', 3],
+	          ['Golf', 1],
+	          ['Football', 1],
+	          ['Basketball', 1],
+	          ['Cricket', 2]
+	        ]);
+
+	        // Set chart options
+	        var options = {'title':'Sports Survey',
+	                       'width':350,
+	                       'height':200};
+
+		var node = document.createElement('div'), infoWindow = new google.maps.InfoWindow(), chart = new google.visualization.PieChart(
+				node);
+
+		chart.draw(data, options);
+		infoWindow.setContent(node);
+		infoWindow.open(marker.getMap(), marker);
+	}
+	  //get address and ploat on map
+	function codeAddress() {
+		var address = document.getElementById('address').value;
+		geocoder.geocode({
+			'address' : address
+		}, function(results, status) {
+			if (status == google.maps.GeocoderStatus.OK) {
+				map.setCenter(results[0].geometry.location);
+				var currentZoomLevel = map.getZoom();
+				map.setZoom(currentZoomLevel + 2);
+
+			} else {
+				alert('Geocode was not successful for the following reason: '
+						+ status);
+			}
+		});
+
+	}
+	 
+	/* OVRE query limit test 2
+	 * 
+	 */
+	function geocode() {
+		if (geoIndex < address.length) {
+			geocodeAddress(geoIndex);
+			++geoIndex;
+		} else {
+			clearInterval(geoTimer);
+		}
+	}
+	var geoIndex = 0;
+	var geoTimer = setInterval(geocode, 600); // 200 milliseconds (to try out) */
+
+	
+	
+</script>
+</head>
+  <body>
+   <div id="map-canvas" align="left"></div>
+    <div id="panel">
+      <input id="address" type="textbox" value="US"  style="padding-top : 10px ">
+      <input type="button" value="Geocode" onclick="codeAddress()" style="padding-top : 10px ">
+		
+		<table style="width: 200px; padding-top : 10px " border="0" title="Sports Rank">
+			<th align="center" colspan="2">Sport Rank</th>
+			<tr>
+				<td>1</td>
+				<td><input type="text" id="rank1" /></td>
+				
+			</tr>
+			<tr>
+				<td>2</td>
+				<td><input type="text" id="rank2" /></td></td>
+				
+			</tr>
+			<tr>
+				<td>3</td>
+				<td><input type="text" id="rank3" /></td></td>
+				
+			</tr>
+		</table>
+		
+		 <table  border="1">
+<tr>
+    
+    <td valign="bottom" style="vertical-align: 250px">
+        <u><b><i>Sports:</i></b></u><br />
+        <img alt="" src="http://maps.google.com/mapfiles/ms/icons/red.png" />
+        Basketball<br />
+        <img alt="" src="http://maps.google.com/mapfiles/ms/icons/blue.png" />
+        Football<br />
+        <img alt="" src="http://maps.google.com/mapfiles/ms/icons/yellow.png" />
+        Cricket<br />
+        <img alt="" src="http://maps.google.com/mapfiles/ms/icons/green.png" />
+        Table tennis<br />
+        <img alt="" src="http://maps.google.com/mapfiles/ms/icons/orange.png" />
+        Golf<br />
+    </td>
+</tr>
+</table>
+	</div>
+   
+  </body>
+</html>
+
